@@ -5,14 +5,24 @@ from .serializers import StudentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from PIL import Image, ImageDraw, ImageFont
+import barcode
+from barcode import Code39
+from barcode.writer import ImageWriter
+
+media_path = "students_monitoring/media/"
 class StudentView(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     
     @action(detail=False)
     def generate_barcode(*args, **kwargs):
-        #INSERIR AQUI O CÓDIGO PARA GERAR OS CÓDIGOS DE BARRAS DOS ALUNOS
-        return Response("Código Gerado")
+        students = Student.objects.all().order_by('id')
+        for student in students:
+            barcode = Code39(student.registration, writer=ImageWriter(), add_checksum=False)
+            barcode_img = barcode.render()
+            barcode_img.save(media_path + student.name + ".png")
+        return Response("FOI")
 
     @action(detail=False)
     def read_barcode(*args, **kwargs):
